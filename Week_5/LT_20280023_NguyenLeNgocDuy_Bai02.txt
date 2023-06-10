@@ -1,0 +1,43 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+class GradientDescent:
+    def __init__(self, func, deriv, learning_rate=0.01, precision=0.0001, max_iters=10000):
+        self.func = func
+        self.deriv = deriv
+        self.learning_rate = learning_rate
+        self.precision = precision
+        self.max_iters = max_iters
+    
+    def optimize(self, iters, x):
+        x_new = x
+        if iters > self.max_iters:
+            iters = self.max_iters
+        for _ in range(iters):
+            x_new = x_new - self.learning_rate * self.deriv(x_new)
+            if np.linalg.norm(self.deriv(x_new)) < self.precision:
+                break
+        return x_new
+    
+def func(x):
+    return (x[0] ** 2 + x[1] - 7) ** 2 + (x[0] - x[1] + 1) ** 2
+
+def deriv(x):
+    return np.array([
+        4 * x[0] * (x[0] ** 2 + x[1] - 7) + 2 * (x[0] - x[1] + 1),
+        2 * (x[0] ** 2 + x[1] - 7) - 2 * (x[0] - x[1] + 1)
+    ])
+
+if __name__ == "__main__":
+    grad_desc = GradientDescent(func, deriv)
+    x_opt = grad_desc.optimize(1000, np.array([4, 5]))
+    print(x_opt)
+    x = np.linspace(-5, 5, 1000)
+    y = np.linspace(-5, 5, 1000)
+    X, Y = np.meshgrid(x, y)
+    Z = func([X, Y])
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.plot_surface(X, Y, Z, linewidth=0, cmap='viridis', antialiased=False)
+    ax.scatter(x_opt[0], x_opt[1], func(x_opt), c='r', marker='o', s=100)
+    plt.show()

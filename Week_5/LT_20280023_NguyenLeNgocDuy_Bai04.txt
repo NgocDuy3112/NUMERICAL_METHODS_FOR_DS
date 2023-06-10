@@ -1,0 +1,44 @@
+import numpy as np
+
+class StochasticGradientDescent:
+    def __init__(self, X, y, learning_rate=0.01, max_iter=10000):
+        self.X = np.insert(X, 0, 1, axis=1) # add a column of ones for the bias term
+        self.y = y
+        self.n = self.X.shape[0] # number of training examples
+        self.d = self.X.shape[1] # number of features
+        self.w = np.zeros(self.d) # initialize the weights to zeros
+        self.learning_rate = learning_rate
+        self.max_iter = max_iter
+    
+    def predict(self, X):
+        X = np.insert(X, 0, 1, axis=1) # add a column of ones for the bias term
+        return np.dot(X, self.w)
+    
+    def optimize(self, iter):
+        if iter > self.max_iter:
+            iter = self.max_iter
+        for i in range(iter):
+            idx = np.random.randint(self.n)
+            x_i = self.X[idx]
+            y_i = self.y[idx]
+            y_pred = np.dot(x_i, self.w)
+            error = y_pred - y_i
+            gradient = 2 * x_i * error
+            self.w = self.w - self.learning_rate * gradient
+        return self.w
+
+if __name__ == "__main__":
+    age = np.array([39, 36, 45, 47, 65, 
+                    46, 67, 42, 67, 56, 
+                    64, 56, 59, 34, 42, 
+                    48, 45, 17, 20, 19])
+    hatt = np.array([144, 136, 138, 145, 162,
+                     142, 170, 124, 158, 154,
+                     162, 150, 140, 110, 128,
+                     130, 135, 114, 116, 124])
+    gradient_descent = StochasticGradientDescent(age.reshape(-1, 1), hatt, 0.0001, 1000)
+    w = gradient_descent.optimize(100)
+    print(w)
+    age_pred = float(input("Enter age: "))
+    y_pred = gradient_descent.predict(np.array([age_pred]).reshape(-1, 1))
+    print(y_pred)

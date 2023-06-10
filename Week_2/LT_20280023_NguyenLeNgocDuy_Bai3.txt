@@ -1,0 +1,41 @@
+import numpy as np
+from PIL import Image
+from scipy.linalg import svd
+import matplotlib.pyplot as plt
+
+def grayscale(image):
+    return np.dot(image[..., :3], [0.299, 0.587, 0.114])
+
+def show_image(image, ax):
+    ax.imshow(image)
+    ax.set_axis_off()
+
+def truncated_svd_decompostion(A, n_non_zeros = 3):
+    if n_non_zeros <= 0:
+        raise ValueError("The number of non-zero singular values must be positive")
+    if n_non_zeros > min(A.shape):
+        raise ValueError("The number of non-zero singular values must be less than or equal to the minimum dimension of A")
+    if not isinstance(n_non_zeros, int):
+        raise ValueError("The number of non-zero singular values must be an integer")
+    U, S_vector, Vt = svd(A)
+    denominator = np.sum(S_vector**2)
+    S = np.diag(S_vector[:n_non_zeros])
+    numerator = np.sum(S**2)
+    U = U[:, :n_non_zeros]
+    Vt = Vt[:n_non_zeros, :]
+    information_gain = 1.0 * numerator  / denominator
+    return U, S, Vt, information_gain
+
+if __name__ == "__main__":
+    image = Image.open("parrot.jpg")
+    image_gray = grayscale(np.array(image))
+    non_zero_singular_values = [10, 25, 100, 150]
+    fig, axes = plt.subplots(2, 2)
+    for n in non_zero_singular_values:
+        U, S, Vt, information_gain = truncated_svd_decompostion(image_gray, n)
+        image_reconstructed = np.dot(np.dot(U, S), Vt)
+        show_image(image_reconstructed, axes[non_zero_singular_values.index(n) // 2, 
+                                             non_zero_singular_values.index(n) % 2])
+        axes[non_zero_singular_values.index(n) // 2, non_zero_singular_values.index(n) % 2] \
+            .set_title(f"Voi {n} gia tri ky di, ty le thong tin giu duoc la {information_gain * 100} %")
+    plt.show()
