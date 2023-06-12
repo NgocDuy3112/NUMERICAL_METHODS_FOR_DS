@@ -10,7 +10,6 @@ class SVDLinearRegression:
         self.w = None
 
     def fit(self, X, y):
-        print(X.shape)
         X_new = np.append(X, np.ones((X.shape[0], 1)), axis=1)
         U, S_vec, Vt = np.linalg.svd(X_new.T @ X_new)
         S_plus = np.reciprocal(S_vec)
@@ -19,7 +18,6 @@ class SVDLinearRegression:
         return self
     
     def predict(self, X):
-        print(X.shape)
         X_new = np.append(X, np.ones((X.shape[0], 1)), axis=1)
         return X_new @ self.w
     
@@ -37,7 +35,7 @@ class GradientDescentLinearRegression:
     
     def fit(self, X, y, init_point):
         self.w = init_point
-        self.b = 0
+        self.b = np.zeros((1,))
         best_loss = np.inf
         early_stopping = self.early_stopping
 
@@ -124,10 +122,10 @@ class GradientDescentLinearRegression:
 
 if __name__ == "__main__":
     data = pd.read_csv("datasets/bai_1.csv")
-    X = data.iloc[:, 1:4]
-    y = data.iloc[:, -1]
+    X = data.iloc[:, 1:4].values
+    y = data.iloc[:, -1].values
     
-    X_pred = np.array([165])
+    X_pred = np.array([79, 2, 26.5])
 
     svd_lr = SVDLinearRegression()
     svd_lr.fit(X, y)

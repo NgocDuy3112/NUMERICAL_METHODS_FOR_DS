@@ -32,7 +32,7 @@ class GradientDescentLinearRegression:
     
     def fit(self, X, y, init_point):
         self.w = init_point
-        self.b = 0
+        self.b = np.zeros((1,))
         best_loss = np.inf
         early_stopping = self.early_stopping
 
@@ -129,7 +129,7 @@ class GradientDescentLogisticRegression:
     
     def fit(self, X, y, init_point):
         self.w = init_point
-        self.b = 0
+        self.b = np.zeros((1,))
         best_loss = np.inf
         early_stopping = self.early_stopping
 

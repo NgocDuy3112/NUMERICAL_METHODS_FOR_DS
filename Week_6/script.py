@@ -1,24 +1,41 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
 import warnings
 warnings.filterwarnings("ignore")
 
 
-class GradientDescentLogisticRegression:
-    def __init__(self, algo_type='normal', learning_rate=2e-4, epochs=50000, early_stopping=5, threshold=0.5):
+class SVDLinearRegression:
+    def __init__(self):
+        self.w = None
+
+    def fit(self, X, y):
+        X_new = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+        U, S_vec, Vt = np.linalg.svd(X_new.T @ X_new)
+        S_plus = np.reciprocal(S_vec)
+        A_At_plus = Vt.T @ np.diag(S_plus) @ U.T
+        self.w = A_At_plus @ X_new.T @ y
+        return self
+    
+    def predict(self, X):
+        X_new = np.append(X, np.ones((X.shape[0], 1)), axis=1)
+        return X_new @ self.w
+    
+
+class GradientDescentLinearRegression:
+    def __init__(self, algo_type='normal', learning_rate=1e-4, precision=1e-9, epochs=50000, early_stopping=5):
         self.w = None
         self.b = None
         self.algo_type = algo_type
         self.learning_rate = learning_rate
         self.epochs = epochs
+        self.precision = precision
         self.early_stopping = early_stopping
         self.count_iter = 0
-        self.threshold = threshold
     
     def fit(self, X, y, init_point):
         self.w = init_point
-        self.b = 0
+        self.b = np.zeros((1,))
         best_loss = np.inf
         early_stopping = self.early_stopping
 
@@ -26,7 +43,7 @@ class GradientDescentLogisticRegression:
             for _ in range(self.epochs):
                 y_hat = self.predict(X)
 
-                loss = -np.sum(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
+                loss = 1 / 2 * np.mean((y_hat - y) ** 2)
 
                 dw = (y_hat - y).T @ X / len(y)
                 db = np.sum(y_hat - y) / len(y)
@@ -47,12 +64,12 @@ class GradientDescentLogisticRegression:
         
         elif self.algo_type == "stochastic":
             for _ in range(self.epochs):
-                X_rand = X.iloc[np.random.randint(0, X.shape[0])]
+                X_rand = X[np.random.randint(0, X.shape[0])]
                 y_rand = y[np.random.randint(0, y.shape[0])]
 
                 y_hat = self.predict(X_rand)
 
-                loss = -np.sum(y_rand * np.log(y_hat) + (1 - y_rand) * np.log(1 - y_hat))
+                loss = 1 / 2 * (y_hat - y_rand) ** 2
 
                 dw = (y_hat - y_rand) * X_rand
                 db = (y_hat - y_rand) 
@@ -74,7 +91,7 @@ class GradientDescentLogisticRegression:
             for epoch in range(self.epochs):
                 y_hat = self.predict(X)
 
-                loss = -np.sum(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
+                loss = 1 / 2 * np.mean((y_hat - y) ** 2)
 
                 dw = (y_hat - y).T @ X / len(y)
                 db = np.sum(y_hat - y) / len(y)
@@ -98,32 +115,35 @@ class GradientDescentLogisticRegression:
 
         return self
 
-    def predict_proba(self, X):
-        return 1 / (1 + np.exp(-(X @ self.w + self.b)))
-    
+
     def predict(self, X):
-        return self.predict_proba(X) >= self.threshold
+        return X @ self.w + self.b
 
 
 if __name__ == "__main__":
-    threshold = 0.8
-    data = pd.read_csv("datasets/bai_3.csv")
-    X = data.iloc[:, 0:2].values
+    data = pd.read_csv("datasets/bai_1.csv")
+    X = data.iloc[:, 1:4].values
     y = data.iloc[:, -1].values
     
-    fig, axs = plt.subplots(1, 2)
+    X_pred = np.array([79, 2, 26.5])
 
-    agd_lr = GradientDescentLogisticRegression(threshold=threshold, algo_type = "accelerated")
-    agd_lr.fit(X, y, init_point=np.array([-1.0, 5.0]))
-    y_pred_agd_lr = agd_lr.predict(X)
+    svd_lr = SVDLinearRegression()
+    svd_lr.fit(X, y)
+    
+    print("Using SVD: ", svd_lr.predict(X_pred.reshape(1, -1)))
 
-    rhs = -np.log(1 / threshold - 1)
+    gd_lr = GradientDescentLinearRegression()
+    gd_lr.fit(X, y, init_point=np.array([0.3612675, 0.2125, 0.2555]))
+    print("Using Gradient Descent: ", gd_lr.predict(X_pred)) 
 
-    plt.scatter(data.iloc[:, 0], data.iloc[:, 1], c=y_pred_agd_lr)
-    plt.xlabel("Thoi gian lam viec")
-    plt.ylabel("Muc luong")
+    acc_gd_lr = GradientDescentLinearRegression(algo_type="accelerated")
+    acc_gd_lr.fit(X, y, init_point=np.array([0.3612675, 0.2125, 0.2555]))
+    print("Using Accelerated Gradient Descent: ", acc_gd_lr.predict(X_pred)) 
 
-    t = np.linspace(2.5, 11, 100)
-    yt = (rhs - agd_lr.b - agd_lr.w[0] * t) / agd_lr.w[1]
-    plt.plot(t, yt)
-    plt.title("Using Accelerated Gradient Descent")
+    sto_gd_lr = GradientDescentLinearRegression(algo_type="stochastic")
+    sto_gd_lr.fit(X, y, init_point=np.array([0.3612675, 0.2125, 0.2555]))
+    print("Using Stochastic Gradient Descent: ", sto_gd_lr.predict(X_pred)) 
+
+    sklearn_lr = LinearRegression()
+    sklearn_lr.fit(X, y)
+    print("Using sklearn: ", sklearn_lr.predict(X_pred.reshape(1, -1)))
