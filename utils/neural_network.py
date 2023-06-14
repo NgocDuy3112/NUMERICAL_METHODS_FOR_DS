@@ -147,7 +147,7 @@ if __name__ == "__main__":
     y = np.array([[0], [1], [1], [0]])
 
     # Create a neural network
-    nn = NeuralNetwork(2, [(2, "leaky_relu"), (3, "relu")], (1, "sigmoid"))
+    nn = NeuralNetwork(2, [(2, "leaky_relu"), (2, "relu")], (1, "sigmoid"))
 
     # Train the neural network
     nn.train(X, y, num_epochs=500000, learning_rate=0.1, verbose=False)
