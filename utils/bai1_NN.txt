@@ -1,0 +1,92 @@
+import numpy as np
+
+class NeuralNetwork:
+    def __init__(self, input_size, hidden_size, output_size):
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        
+        # Initialize weights and biases with random values
+        np.random.seed(42)
+        self.W1 = np.random.randn(self.input_size, self.hidden_size)
+        self.b1 = np.random.randn(1, self.hidden_size)
+        
+        self.W2 = np.random.randn(self.hidden_size, self.output_size)
+        self.b2 = np.random.randn(1, self.output_size)
+        #self.W1 = np.array([[0.16,-0.07],[-0.66,0.63]])
+        #self.b1 = np.array([[0.37,-0.98]])
+        #self.W2 = np.array([[0.41],[-0.9]])
+        #self.b2 = np.array([[0.35]])
+        
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+    
+    def forward(self, X):
+        # Compute activations of the hidden layer
+        self.hidden_activations = self.sigmoid(np.dot(X, self.W1) + self.b1)
+        
+        # Compute activations of the output layers
+        self.output_activations = self.sigmoid(np.dot(self.hidden_activations, self.W2) + self.b2)
+        
+        return self.output_activations
+    
+    def backward(self, X, y, learning_rate):
+        m = X.shape[0]  # Number of training examples
+        
+        # Compute gradients
+        dZ2 = self.output_activations - y
+        #print(dZ2)
+        dW2 = (1 / m) * np.dot(self.hidden_activations.T, dZ2)
+        db2 = (1 / m) * np.sum(dZ2, axis=0, keepdims=True)
+        
+        #print(self.hidden_activations)
+        dZ1 = np.dot(dZ2, self.W2.T) * (self.hidden_activations * (1 - self.hidden_activations))
+        #print(dZ1)
+        dW1 = (1 / m) * np.dot(X.T, dZ1)
+        db1 = (1 / m) * np.sum(dZ1, axis=0)
+        
+        # Update weights and biases
+        self.W2 -= learning_rate * dW2
+        self.b2 -= learning_rate * db2
+        self.W1 -= learning_rate * dW1
+        self.b1 -= learning_rate * db1
+        
+    
+    def train(self, X, y, epochs, learning_rate):
+        for epoch in range(epochs):
+            # Forward propagation
+            output = self.forward(X)
+            m = len(y)
+            # Backward propagation
+            self.backward(X, y, learning_rate)
+            #rint(W1,b1,W2,b2)
+            # Print the loss every 100 epochs
+            if (epoch + 1) % 100 == 0:
+                loss = -1/m * np.sum((y * np.log(output) + (1 - y) * np.log(1 - output)))
+                #print(loss)
+                print(f"Epoch {epoch + 1}/{epochs} Loss: {loss} ")
+
+    def predict(self, X):
+        print("W11(1): ",self.W1[0][0], " W21(1): ",self.W1[1][0])
+        print("b1(1)",self.b1[0][0])
+        print("W12(1): ",self.W1[0][1], " W21(1): ",self.W1[1][1])
+        print("b2(1)",self.b1[0][1])
+        print("W12(1): ",self.W2[0][0], " W21(1): ",self.W2[1][0])
+        print("b1(2)",self.b2[0][0])
+        predictions = [1 if pred > 0.5 else 0 for pred in self.forward(X)]
+        
+        
+        return predictions
+    
+nn = NeuralNetwork(input_size=2, hidden_size=2, output_size=1)
+
+X = np.array([[0,0],[1,1],[1,0],[0,1]])
+y = np.array([[0],[0],[1],[1]])
+# Train the neural network
+nn.train(X, y, epochs=100000, learning_rate=0.1)
+
+# Make predictions on the input data
+predictions = nn.predict(X)
+print("Predictions:")
+print(predictions)
+

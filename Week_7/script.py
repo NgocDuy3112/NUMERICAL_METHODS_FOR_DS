@@ -1,5 +1,34 @@
 import numpy as np
 
+class Activation:
+    def __init__(self, func_type):
+        self.type = func_type
+
+    def compute(self, x):
+        if self.type == "sigmoid":
+            return 1 / (1 + np.exp(-x))
+        elif self.type == "relu":
+            return np.maximum(0, x)
+        elif self.type == "tanh":
+            return np.tanh(x)
+        elif self.type == "softmax":
+            return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
+        else:
+            raise Exception("Invalid activation function.")
+    
+    def gradient(self, x):
+        if self.type == "sigmoid":
+            return self.compute(x) * (1 - self.compute(x))
+        elif self.type == "relu":
+            return np.where(x > 0, 1, 0)
+        elif self.type == "tanh":
+            return 1 - np.power(self.compute(x), 2)
+        elif self.type == "softmax":
+            return self.compute(x) * (1 - self.compute(x))
+        else:
+            raise Exception("Invalid activation function.")
+    
+
 class XORNeuralNetwork:
     def __init__(self, input_size, hidden_sizes, output_size):
         self.input_size = input_size
@@ -62,7 +91,7 @@ class XORNeuralNetwork:
             self.grad_weights.append(grad_w)
             self.grad_biases.append(grad_b)
 
-    def train(self, X, y, num_epochs, learning_rate, batch_size=None):
+    def train(self, X, y, num_epochs, learning_rate, batch_size=None, verbose=True):
         if batch_size is None:
             batch_size = X.shape[0]
 
@@ -88,7 +117,9 @@ class XORNeuralNetwork:
             # Print loss after every epoch
             self.forward(X)
             loss = self.cross_entropy_loss(y)
-            print(f"Epoch {epoch}/{num_epochs}, Loss: {loss}")
+
+            if verbose:
+                print(f"Epoch {epoch}/{num_epochs}, Loss: {loss}")
 
     def predict(self, X):
         # Make predictions
@@ -111,7 +142,7 @@ if __name__ == "__main__":
     nn = XORNeuralNetwork(2, [2], 1)
 
     # Train the neural network
-    nn.train(X, y, num_epochs=10000, learning_rate=0.1)
+    nn.train(X, y, num_epochs=10000, learning_rate=0.1, verbose=False)
 
     # Make predictions
     predictions = nn.predict(X)

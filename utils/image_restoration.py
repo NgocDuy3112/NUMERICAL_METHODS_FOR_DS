@@ -1,10 +1,9 @@
 from PIL import Image
 import numpy as np
-from scipy import signal
 import matplotlib.pyplot as plt
 
 class ImageRestoration:
-    def __init__(self, blur_image, l=30, type='horizontal'):
+    def __init__(self, blur_image, l=5, type='horizontal'):
         self.blur_image = blur_image
         self.l = l
         self.A = self.__create_toeplitz_matrix__(l)
@@ -51,4 +50,4 @@ class ImageRestoration:
 if __name__ == '__main__':
     img = Image.open("parrot_vertical.jpg")
     arr = np.array(img)
-    new_img = ImageRestoration(arr, l=30, type='vertical').show()
+    new_img = ImageRestoration(arr, l=5, type='vertical').show()
